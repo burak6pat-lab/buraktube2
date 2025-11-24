@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-export const dynamic = 'force-dynamic';
-// SÜRE HESAPLAMA
+
+// SÜRE HESAPLAMA (Shorts Ayıklayıcı)
 function parseDuration(duration) {
   if (!duration) return 0;
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -17,13 +17,11 @@ function timeAgo(dateString) {
   const published = new Date(dateString);
   const diffSeconds = Math.floor((now - published) / 1000);
   if (diffSeconds < 60) return 'Az önce';
-  
   const intervals = [
     { label: 'yıl', seconds: 31536000 },
     { label: 'ay', seconds: 2592000 },
     { label: 'gün', seconds: 86400 },
-    { label: 'saat', seconds: 3600 },
-    { label: 'dakika', seconds: 60 }
+    { label: 'saat', seconds: 3600 }
   ];
   for (const interval of intervals) {
     const count = Math.floor(diffSeconds / interval.seconds);
@@ -34,146 +32,144 @@ function timeAgo(dateString) {
 
 export async function GET(request) {
   try {
-    // 🔑 ANAHTARLAR (Senin 6 Anahtarın)
+    // 🦁 SENİN BANA ATTIĞIN 6 ALTIN ANAHTAR (HEPSİ BURADA HAZIR)
     const API_KEYS = [
-      "AIzaSyDt9_odVAUffTb3WWSRdYEpWKX5GqZ56fQ", 
-      "AIzaSyDrxuNNyQvsmmF2hl1638cpsincmhABDBM", 
-      "AIzaSyDBeLXRJ2pbmHBfw6it2U6XOVp2PY75qws", 
-      "AIzaSyCYSxqW4Uz02bDuWC61wZC6bKhabypcFZs", 
-      "AIzaSyBu_6sC6RiP15MzTBWdfhPh4LACwA8C0-A", 
+      "AIzaSyDt9_odVAUffTb3WWSRdYEpWKX5GqZ56fQ",
+      "AIzaSyDrxuNNyQvsmmF2hl1638cpsincmhABDBM",
+      "AIzaSyDBeLXRJ2pbmHBfw6it2U6XOVp2PY75qws",
+      "AIzaSyCYSxqW4Uz02bDuWC61wZC6bKhabypcFZs",
+      "AIzaSyBu_6sC6RiP15MzTBWdfhPh4LACwA8C0-A",
       "AIzaSyAlO8jF4ca4wT17Didq5wq4yHZPOBec1EA"
     ];
 
+    // Sistem her seferinde rastgele birini seçecek
     const API_KEY = API_KEYS[Math.floor(Math.random() * API_KEYS.length)];
-    
+
+    // Terminale hangi anahtarı kullandığını yazsın (Kontrol için)
+    console.log(`\n🦁 --------------------------------------------------`);
+    console.log(`🦁 Motor Başlatıldı! Anahtar Sonu: ...${API_KEY.slice(-5)}`);
+
     const { searchParams } = new URL(request.url);
-    const timeParam = searchParams.get('months') || "12"; // Varsayılan 1 Yıl
+    const months = searchParams.get('months') || "120";
     const minViews = parseInt(searchParams.get('minViews')) || 0;
     const category = searchParams.get('category') || "teknoloji";
 
-    // KATEGORİLER
-    const queryMap = {
-      yapay_zeka: "artificial intelligence openai",
-      teknoloji: "future technology engineering",
-      siber_guvenlik: "cyber security hacker",
-      kripto_finans: "bitcoin crypto finance",
-      girisimcilik: "startup business success",
-      savas: "war history military",
-      imparatorluk: "empire history ancient",
-      soguk_savas: "cold war spy history",
-      uzay: "space universe nasa",
-      bilim: "science physics biology",
-      cografya: "geopolitics geography borders",
-      psikoloji: "psychology human behavior",
-      felsefe: "philosophy history ideas",
-      sinema_sanat: "cinema art history",
-      spor_tarihi: "sports history legendary",
-      otomobil: "automotive cars engineering",
-      ekonomi: "global economy money",
-      gundem: "world news documentary",
-      suç_kriminoloji: "true crime documentary",
-      saglik: "medical health science"
+    // KATEGORİLER (Sadece İngilizce Global İçerik)
+    const categoryQueries = {
+      yapay_zeka: "artificial intelligence documentary",
+      teknoloji: "future technology documentary",
+      siber_guvenlik: "cyber security documentary",
+      kripto_finans: "bitcoin history documentary",
+      girisimcilik: "business success stories documentary",
+      savas: "war history documentary",
+      imparatorluk: "ancient empires documentary",
+      soguk_savas: "cold war documentary",
+      uzay: "space universe documentary",
+      bilim: "science discovery documentary",
+      cografya: "geopolitics documentary",
+      psikoloji: "psychology documentary",
+      felsefe: "philosophy documentary"
     };
 
-    const rawQuery = queryMap[category] || "documentary";
-    const searchQuery = `${rawQuery} -shorts`;
+    const queryText = categoryQueries[category] || "documentary";
+    // Sadece "-shorts" dedik, sorguyu hafiflettik ki çok sonuç gelsin
+    const searchQuery = `${queryText} -shorts`;
 
-    // TARİH AYARI
     let publishedAfter = "";
-    
-    // Eğer "all" seçilirse bile çok eskiye gitmesin (Son 5 yıl gibi sınır koyabiliriz)
-    // Ama sen "1 yıl geri gitsin en fazla" dedin. O yüzden page.js'den max 12 ay yollayacağız.
-    // Burada gelen isteği işliyoruz.
-    if (timeParam !== "all") {
-        const date = new Date();
-        if (timeParam.includes("d")) {
-            date.setDate(date.getDate() - parseInt(timeParam.replace("d", "")));
-        } else if (timeParam.includes("m")) {
-            date.setMonth(date.getMonth() - parseInt(timeParam.replace("m", "")));
-        } else {
-            // Sadece sayı geldiyse ay olarak al
-            date.setMonth(date.getMonth() - parseInt(timeParam));
-        }
-        publishedAfter = `&publishedAfter=${date.toISOString()}`;
+    if (parseInt(months) < 100) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - parseInt(months));
+      publishedAfter = `&publishedAfter=${date.toISOString()}`;
+      console.log(`📅 Tarih Filtresi: Son ${months} ay`);
+    } else {
+      console.log(`📅 Tarih Filtresi: TÜM ZAMANLAR`);
     }
 
-    // --- ARAMA FONKSİYONU ---
-    async function searchYouTube(q, orderType) {
-        let videos = [];
-        let nextPageToken = "";
-        let pageCount = 0;
-        
-        // DAHA FAZLA VİDEO İÇİN SAYFA SINIRINI ARTIRDIM
-        const MAX_PAGES = 10; // 10 Sayfa x 50 video = 500 video tarayacak
+    console.log(`🔍 Aranan Kelime: "${searchQuery}"`);
 
-        while (videos.length < 60 && pageCount < MAX_PAGES) {
-            const tokenParam = nextPageToken ? `&pageToken=${nextPageToken}` : "";
-            
-            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video${publishedAfter}&order=${orderType}&maxResults=50${tokenParam}&key=${API_KEY}`;
-            
-            const res = await fetch(url);
-            const data = await res.json();
+    // --- DÖNGÜ (LOOP) ---
+    let allVideos = [];
+    let nextPageToken = "";
+    let pageCount = 0;
+    const MAX_PAGES = 6; // 6 Sayfa Tara (300 Video eder, baya yeterli)
 
-            if (!data.items || data.items.length === 0) break;
+    while (allVideos.length < 50 && pageCount < MAX_PAGES) {
+      const tokenParam = nextPageToken ? `&pageToken=${nextPageToken}` : "";
 
-            const videoIds = data.items.map(item => item.id.videoId).join(',');
-            const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIds}&key=${API_KEY}`;
-            const statsRes = await fetch(statsUrl);
-            const statsData = await statsRes.json();
+      // "relevance" kullanarak kesin sonuç almayı garantiliyoruz
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video${publishedAfter}&order=relevance&relevanceLanguage=en&maxResults=50${tokenParam}&key=${API_KEY}`;
 
-            if (!statsData.items) break;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
 
-            const batch = statsData.items.map((v) => {
-                const durationSec = parseDuration(v.contentDetails?.duration);
-                return {
-                    title: v.snippet.title,
-                    channel: v.snippet.channelTitle,
-                    views: parseInt(v.statistics?.viewCount || "0"),
-                    thumbnail: v.snippet.thumbnails?.medium?.url || v.snippet.thumbnails?.high?.url,
-                    uploadedAt: timeAgo(v.snippet.publishedAt),
-                    fullDate: new Date(v.snippet.publishedAt),
-                    durationSec: durationSec,
-                    url: `https://www.youtube.com/watch?v=${v.id}`
-                };
-            });
+      if (searchData.error) {
+        console.error(`❌ API HATASI:`, searchData.error.message);
+        // Eğer kota doldu hatasıysa döngüyü kırma
+        break;
+      }
 
-            // FİLTRELER
-            // 1. SHORTS ENGELLEME: Sınırı 120 saniyeye (2 dk) çıkardım.
-            // 2 dakikanın altındaki hiçbir şey gelmeyecek. Garanti çözüm.
-            const cleanBatch = batch.filter(v => v.durationSec > 120);
-            
-            // 2. İZLENME FİLTRESİ
-            const viewedBatch = cleanBatch.filter(v => v.views >= minViews);
+      if (!searchData.items || searchData.items.length === 0) {
+        console.log(`⚠️ Sayfa ${pageCount + 1}: YouTube boş döndü.`);
+        break;
+      }
 
-            videos = [...videos, ...viewedBatch];
+      const videoIds = searchData.items.map(item => item.id.videoId).join(',');
 
-            nextPageToken = data.nextPageToken;
-            if (!nextPageToken) break;
-            pageCount++;
-        }
-        return videos;
+      // DETAYLARI ÇEK
+      const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIds}&key=${API_KEY}`;
+      const statsRes = await fetch(statsUrl);
+      const statsData = await statsRes.json();
+
+      if (!statsData.items) break;
+
+      // İŞLEME
+      let batchVideos = statsData.items.map((v) => {
+        const durationSec = parseDuration(v.contentDetails?.duration);
+        return {
+          title: v.snippet.title,
+          channel: v.snippet.channelTitle,
+          views: parseInt(v.statistics?.viewCount || "0"),
+          thumbnail: v.snippet.thumbnails?.medium?.url || v.snippet.thumbnails?.high?.url,
+          uploadedAt: timeAgo(v.snippet.publishedAt),
+          fullDate: new Date(v.snippet.publishedAt),
+          durationSec: durationSec,
+          url: `https://www.youtube.com/watch?v=${v.id}`
+        };
+      });
+
+      const totalInBatch = batchVideos.length;
+
+      // 1. SHORTS FİLTRESİ (60 sn altı çöp)
+      batchVideos = batchVideos.filter(v => v.durationSec > 60);
+      const afterDuration = batchVideos.length;
+
+      // 2. İZLENME FİLTRESİ
+      batchVideos = batchVideos.filter(v => v.views >= minViews);
+      const afterViews = batchVideos.length;
+
+      // TERMİNALE RAPOR VER
+      console.log(`📄 Sayfa ${pageCount + 1} Raporu:`);
+      console.log(`   - Gelen: ${totalInBatch}`);
+      console.log(`   - Kalan (Shorts Temizliği): ${afterDuration}`);
+      console.log(`   - Kalan (İzlenme Filtresi): ${afterViews}`);
+
+      allVideos = [...allVideos, ...batchVideos];
+
+      nextPageToken = searchData.nextPageToken;
+      if (!nextPageToken) break;
+      pageCount++;
     }
 
-    // --- STRATEJİ ---
-    // 1. Öncelik: İzlenme Sayısına Göre Ara
-    let allVideos = await searchYouTube(searchQuery, "viewCount");
+    // SIRALAMA (Yeniden Eskiye)
+    allVideos.sort((a, b) => b.fullDate - a.fullDate);
 
-    // 2. Eğer az video geldiyse -> Alaka Düzeyine Göre Ara (Yedek)
-    if (allVideos.length < 15) {
-        const moreVideos = await searchYouTube(searchQuery, "relevance");
-        allVideos = [...allVideos, ...moreVideos];
-    }
+    console.log(`🚀 FİNAL LİSTE: ${allVideos.length} Video Hazır.`);
+    console.log(`🦁 --------------------------------------------------\n`);
 
-    // Eşsizleştirme
-    const uniqueVideos = Array.from(new Map(allVideos.map(item => [item.url, item])).values());
-
-    // SIRALAMA: YENİDEN ESKİYE
-    uniqueVideos.sort((a, b) => b.fullDate - a.fullDate);
-
-    return NextResponse.json({ videos: uniqueVideos });
+    return NextResponse.json({ videos: allVideos });
 
   } catch (err) {
-    console.error("SUNUCU HATASI:", err);
+    console.error("CRITICAL SERVER ERROR:", err);
     return NextResponse.json({ error: "Sunucu Hatası" }, { status: 500 });
   }
 }
