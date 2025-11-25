@@ -32,18 +32,8 @@ function timeAgo(dateString) {
 
 export async function GET(request) {
   try {
-    // 🦁 SENİN BANA ATTIĞIN 6 ALTIN ANAHTAR (HEPSİ BURADA HAZIR)
-    const API_KEYS = [
-      "AIzaSyDt9_odVAUffTb3WWSRdYEpWKX5GqZ56fQ",
-      "AIzaSyDrxuNNyQvsmmF2hl1638cpsincmhABDBM",
-      "AIzaSyDBeLXRJ2pbmHBfw6it2U6XOVp2PY75qws",
-      "AIzaSyCYSxqW4Uz02bDuWC61wZC6bKhabypcFZs",
-      "AIzaSyBu_6sC6RiP15MzTBWdfhPh4LACwA8C0-A",
-      "AIzaSyAlO8jF4ca4wT17Didq5wq4yHZPOBec1EA"
-    ];
-
-    // Sistem her seferinde rastgele birini seçecek
-    const API_KEY = API_KEYS[Math.floor(Math.random() * API_KEYS.length)];
+    // 🦁 HARDCODED API KEY (Direkt Elle Yazıldı)
+    const API_KEY = "AIzaSyCyP-XVfCXH47HKy42aaRwHyr9hRacbL0c";
 
     // Terminale hangi anahtarı kullandığını yazsın (Kontrol için)
     console.log(`\n🦁 --------------------------------------------------`);
