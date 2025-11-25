@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-
+export const dynamic = 'force-dynamic';
 // SÜRE HESAPLAMA (Shorts Ayıklayıcı)
 function parseDuration(duration) {
   if (!duration) return 0;
